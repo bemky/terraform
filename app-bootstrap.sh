@@ -1,5 +1,5 @@
 ###
-# Setup [user.. "bemky"] for app/site ([domain.. "bemky.com"])
+# Setup [user.. "bemky"] for app/site ([domain.. "[domain]"])
 ###
 groupadd --system [user]
 useradd -c '[User] User' -g [user] --create-home --home /srv/[user] --shell /bin/bash [user]
@@ -12,17 +12,17 @@ sync-accounts
 
 
 
-cat <<EOF > /etc/nginx/sites/bemky.com
+cat <<EOF > /etc/nginx/sites/[domain]
 server {
   listen 80;
   listen [::]:80;
 
-  server_name bemky.com;
+  server_name [domain];
 
   include /etc/nginx/letsencrypt.conf;
 
   location ~ ^/ {
-    return 301 https://bemky.com$request_uri;
+    return 301 https://[domain]$request_uri;
   }
 }
 
@@ -30,10 +30,10 @@ server {
   listen 443 ssl http2;
   listen [::]:443 ssl http2;
 
-  server_name bemky.com;
-  include /etc/nginx/ssl/bemky.com;
+  server_name [domain];
+  include /etc/nginx/ssl/[domain];
   
-  root /srv/[user]/bemky.com;
+  root /srv/[user]/[domain];
 
   location / {
 
@@ -43,7 +43,7 @@ server {
       add_header Cache-Control "public, max-age=315360000, immutable";
     }
 
-    if (-f /srv/[user]/shared/maintenance/bemky.com) {
+    if (-f /srv/[user]/shared/maintenance/[domain]) {
       return 503;
     }
 
@@ -60,16 +60,16 @@ certbot certonly \
         --webroot \
         --webroot-path /var/lib/letsencrypt/ \
         --expand \
-        --cert-name "bemky.com" \
+        --cert-name "[domain]" \
         --email "benehmke@gmail.com" \
         --agree-tos \
         --no-eff-email \
-        --domains "bemky.com"
+        --domains "[domain]"
         
 # use provided path to cert
-# for example [cert_path] = /etc/letsencrypt/live/bemky.com/fullchain.pem
+# for example [cert_path] = /etc/letsencrypt/live/[domain]/fullchain.pem
 
-cat <<EOF > /etc/nginx/ssl/bemky.com
+cat <<EOF > /etc/nginx/ssl/[domain]
 ssl_certificate         [cert_path]/fullchain.pem;
 ssl_certificate_key     [cert_path]/privkey.pem;
 ssl_trusted_certificate [cert_path]/chain.pem;
