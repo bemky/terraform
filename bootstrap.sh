@@ -206,3 +206,27 @@ systemctl start  nginx.service
 openssl dhparam -out /etc/nginx/dhparam.pem 4096
 
 systemctl reload nginx.service
+
+
+## For Certbot
+sudo cat <<EOF > /usr/lib/systemd/system/certbot.service
+[Unit]
+Description=Let's Encrypt renewal
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/certbot renew --quiet --agree-tos
+EOF
+
+sudo cat <<EOF > /usr/lib/systemd/system/certbot.timer
+[Unit]
+Description=Twice daily renewal of Let's Encrypt's certificates
+[Timer]
+OnCalendar=0/12:00:00
+RandomizedDelaySec=6h
+Persistent=true
+[Install]
+WantedBy=timers.target
+EOF
+
+sudo systemctl enable certbot.timer
+sudo systemctl start certbot.timer
