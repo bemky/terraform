@@ -50,6 +50,7 @@ pacman -S --noconfirm \
   rsync \
   ncdu \
   tree \
+  certbot \
   logrotate
 
 # Rdoc needed for tab complete in irb?
