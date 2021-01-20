@@ -60,6 +60,7 @@ certbot certonly \
         --webroot \
         --webroot-path /var/lib/letsencrypt/ \
         --expand \
+        --deploy-hook 'systemctl reload nginx'\
         --cert-name "[domain]" \
         --email "benehmke@gmail.com" \
         --agree-tos \
