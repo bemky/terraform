@@ -214,7 +214,7 @@ sudo cat <<EOF > /usr/lib/systemd/system/certbot.service
 Description=Let's Encrypt renewal
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/certbot renew --quiet --agree-tos
+ExecStart=/usr/bin/certbot renew --quiet --agree-tos --post-hook "systemctl reload ngnix"
 EOF
 
 sudo cat <<EOF > /usr/lib/systemd/system/certbot.timer
