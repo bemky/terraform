@@ -1,0 +1,13 @@
+[Unit]
+Description=[**Application**] Web Server Sockets
+After=network.target
+Requires=[**application**].target
+
+[Socket]
+ListenStream=127.0.0.1:8036
+NoDelay=true
+ReusePort=true
+Backlog=1024
+
+[Install]
+WantedBy=[**application**].target

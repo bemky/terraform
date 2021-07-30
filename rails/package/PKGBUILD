@@ -1,0 +1,36 @@
+# Maintainer: Jon Bracy <jon@42floors.com>
+
+pkgname=[**application**]
+pkgver=20210208
+pkgrel=2
+pkgdesc='[**Application**] Application'
+arch=('x86_64')
+depends=('ruby' 'git' 'nodejs' 'npm'  'imagemagick' 'libvips' 'libwebp' 'librsvg' 'libheif' 'mupdf-tools' 'rsync')
+license=('custom')
+install=[**application**].install
+backup=('usr/lib/systemd/system/[**application**]-app.socket')
+
+source=('[**application**]-app.service'
+        '[**application**]-app.socket'
+        '[**application**]-worker@.service'
+        '[**application**]-workers.target'
+        '[**application**].target'
+        'logrotate')
+
+sha256sums=('3ed84ee6a361ea46e733b6db0d377c0c9a6d4858cc3f8014d0a23161a26a0687'
+            '912e6722fe6c1d596a9a5ae6d12601d3d4d2cc24a11ac49b900363065a65cd9b'
+            '1099be6723585c98a171ddaf33d054bbce1e95ae71f93ad6cb40b82ffb6445e8'
+            'aab225412d9bf0647b4c0b941ff512268dbad00cc9b250432940dda205737e86'
+            '85e2680282c8028e7faf20a257ac5855172bea12ceb7d7453db32c499547c233'
+            'c1b5ab65ab7906846c8ffb27bac95e2e0cb0cb62546e9e1287c1a06d9f022831')
+
+package() {
+	cd $srcdir
+
+	install -Dm644 logrotate ${pkgdir}/etc/logrotate.d/[**application**]
+	install -Dm644 [**application**].target ${pkgdir}/usr/lib/systemd/system/[**application**].target
+	install -Dm644 [**application**]-app.socket ${pkgdir}/usr/lib/systemd/system/[**application**]-app.socket
+	install -Dm644 [**application**]-app.service ${pkgdir}/usr/lib/systemd/system/[**application**]-app.service
+	install -Dm644 [**application**]-workers.target ${pkgdir}/usr/lib/systemd/system/[**application**]-workers.target
+	install -Dm644 [**application**]-worker@.service ${pkgdir}/usr/lib/systemd/system/[**application**]-worker@.service
+}

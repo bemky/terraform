@@ -1,0 +1,15 @@
+[Unit]
+Description=[**Application**] Web Server
+After=network.target
+Requires=[**application**].target [**application**]-app.socket
+
+[Service]
+EnvironmentFile=/srv/[**application**]/.env
+User=[**application**]
+Group=[**application**]
+Restart=always
+WorkingDirectory=/srv/[**application**]/current
+ExecStart=/usr/bin/bundle exec --keep-file-descriptors puma --tag="[**Application**] Server" --workers=4 --threads=2:4 --bind=tcp://127.0.0.1:8036
+
+[Install]
+WantedBy=[**application**].target

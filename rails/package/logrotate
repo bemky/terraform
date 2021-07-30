@@ -1,0 +1,7 @@
+/srv/[**application**]/shared/log/*.log {
+	size	250M
+	rotate	10
+	missingok
+	compress
+	copytruncate
+}

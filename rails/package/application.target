@@ -1,0 +1,5 @@
+[Unit]
+Description=[**Application**] Application
+
+[Install]
+WantedBy=multi-user.target

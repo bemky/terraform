@@ -4,9 +4,15 @@
 groupadd --system [**user**]
 useradd -c '[**user**] User' -g [**user**] --create-home --home /srv/[**user**] --shell /bin/bash [**user**]
 chmod 755 /srv/[**user**]
+mkdir /srv/[**user**]/[**domain**]
+chown [**user**] /srv/[**user**]/[**domain**]
+chgrp [**user**] /srv/[**user**]/[**domain**]
 
-mkdir /srv/[**user**]/.ssh
 ssh-keyscan github.com >> /srv/[**user**]/.ssh/known_hosts
+sudo cat <<EOF >> /etc/sync-accounts.conf
+  [**user**]
+    - bemky
+EOF
 sync-accounts
 
 

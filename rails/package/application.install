@@ -1,0 +1,116 @@
+post_install() {
+
+	# Group
+	if ! getent group [**application**] > /dev/null; then
+		groupadd --system [**application**]
+	fi
+
+	# User
+	if ! getent passwd [**application**] > /dev/null; then
+		useradd -c '[**Application**] User' -g [**application**] --create-home --home /srv/[**application**] --shell /bin/bash [**application**]
+	fi
+
+
+	# SSH Known Hosts
+	install -o [**application**] -g [**application**] -d /srv/[**application**]/.ssh
+	ssh-keyscan github.com >> /srv/[**application**]/.ssh/known_hosts
+	sync-accounts
+
+	# Sudo Access
+	cp /etc/sudoers /etc/sudoers.new
+	for c in 'start' 'restart' 'stop' 'reload' 'status'
+	do
+		for s in '[**application**].target' '[**application**]-app.socket' '[**application**]-app.service' '[**application**]-workers.target'
+		do
+			echo "[**application**] ALL=(ALL) NOPASSWD: /usr/bin/systemctl $c $s" >> /etc/sudoers.new
+		done
+	done
+
+	visudo -c -s -f /etc/sudoers.new
+	if [ $? -ne 0 ]; then
+		echo 'Error updating /etc/sudoers (see /etc/sudoers.new)' 1>&2
+	else
+		mv /etc/sudoers.new /etc/sudoers
+	fi
+
+	# .env
+	cat <<EOF > /srv/[**application**]/.env
+RAILS_ENV=production
+RACK_ENV=production
+TMPDIR=/srv/[**application**]/current/tmp
+EOF
+	chown [**application**]:[**application**] /srv/[**application**]/.env
+
+	# ./bashrc
+	cat <<'EOF' > /srv/[**application**]/.bashrc
+export $(egrep -v '^#' ~/.env | xargs -d '\n')
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# enable color support of ls and also add handy aliases
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias be='bundle exec'
+alias sc='systemctl'
+alias rails='bundle exec rails'
+alias console='cd ~/current && bundle exec rails c'
+alias logs='tail -f ~/shared/log/$RAILS_ENV.log'
+
+PS1='[\[\e[0;32m\]\u\[\e[0m\]/\[\e[0;31m\]$RAILS_ENV\[\e[0m\]@\[\e[0;34m\]\h\[\e[0m\] \[\e[0;32m\]\W\[\e[0m\]]$ '
+EOF
+
+	# Capistrano Setup
+	chmod 0755 /srv/[**application**]
+	install -m755 -o [**application**] -g [**application**] -d /srv/[**application**]/releases
+	install -m755 -o [**application**] -g [**application**] -d /srv/[**application**]/shared
+	install -m755 -o [**application**] -g [**application**] -d /srv/[**application**]/shared/log
+	install -m755 -o [**application**] -g [**application**] -d /srv/[**application**]/shared/tmp
+	install -m755 -o [**application**] -g [**application**] -d /srv/[**application**]/shared/pids
+	install -m750 -o [**application**] -g [**application**] -d /srv/[**application**]/shared/config
+
+	# Notice to User
+	cat <<'EOF'
+
+  Configure the Environment:
+
+    vim /srv/[**application**]/.env
+    vim /usr/lib/systemd/system/[**application**]-app.socket
+    vim /usr/lib/systemd/system/[**application**]-app.service
+
+  Start [**Application**] App:
+
+    systemctl enable [**application**].target
+    systemctl enable [**application**]-app.socket
+    systemctl enable [**application**]-app.service
+    systemctl enable [**application**]-workers.target
+    systemctl enable [**application**]-worker@0.service
+
+    systemctl start [**application**].target # Start the app
+
+EOF
+}
+
+post_remove() {
+
+	if getent passwd [**application**] > /dev/null; then
+		userdel --remove [**application**]
+	fi
+
+	if getent group [**application**] > /dev/null; then
+		groupdel [**application**]
+	fi
+
+	# Revoke Sudo Access
+  cat /etc/sudoers | sed '/[**application**]/d' > /etc/sudoers.new
+
+	visudo -c -s -f /etc/sudoers.new
+	if [ $? -ne 0 ]; then
+		echo 'Error updating /etc/sudoers (see /etc/sudoers.new)' 1>&2
+	else
+		chmod 440 /etc/sudoers
+		chown root:root /etc/sudoers
+		mv /etc/sudoers.new /etc/sudoers
+	fi
+
+}

@@ -3,6 +3,9 @@ echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
 locale-gen
 export LANG=en_US.UTF-8
 
+# User Management
+mkdir /etc/skel/.ssh
+
 # Timezone
 rm /etc/localtime
 ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime
@@ -14,7 +17,7 @@ hostname -F /etc/hostname
 cat <<EOF > /etc/hosts
 127.0.0.1   localhost.localdomain   localhost
 ::1         localhost.localdomain   localhost
-
+EOF
 
 ###
 # Populate keys
@@ -23,6 +26,7 @@ cat <<EOF > /etc/hosts
 pacman-key --init
 pacman-key --populate archlinux
 pacman-key --refresh-keys
+# sometimes need to refesh-keys "--keyserver keyserver.ubuntu.com"
 
 
 # System Update
@@ -31,6 +35,11 @@ pacman --noconfirm -Syu
 # Add 42Floors pacman repo (for account-sync)
 pacman-key -r A1ADA9D4
 pacman-key --lsign-key A1ADA9D4
+cat <<'EOF' >> /etc/pacman.conf
+
+[42floors]
+Server = https://42floors:QKLw3GoM%25uBGtDGX%7DtH4@repo.42floors.com/archlinux/$repo/$arch
+EOF
 pacman -Syy
 
 # Basic Installs
@@ -186,7 +195,8 @@ http {
     resolver_timeout    5s;
 
     types_hash_max_size 4096;
-    
+
+    include /etc/nginx/apps/*;
     include /etc/nginx/sites/*;
 }
 EOF

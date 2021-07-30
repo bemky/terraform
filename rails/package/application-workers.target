@@ -1,0 +1,7 @@
+[Unit]
+Description=[**Application**] Workers
+Requires=[**application**].target
+After=network.target
+
+[Install]
+WantedBy=[**application**].target
