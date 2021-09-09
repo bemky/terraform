@@ -107,3 +107,10 @@ upstream [**application**] {
 EOF
 
 systemctl restart nginx
+
+
+## Setup Postgres DB
+sudo su - postgres
+createuser DATABASE --pwprompt
+createdb DATABASE -O DATABASE -E UTF8
+exit
