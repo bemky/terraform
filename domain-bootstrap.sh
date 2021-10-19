@@ -1,6 +1,12 @@
 ###
-# Setup [user.. "bemky"] for app/site ([domain.. "[**domain**]"])
+# Setup [user.. "[**user**]"] for app/site ([domain.. "[**domain**]"])
+# Find and Replace
+# [**user**], bemky
+# [**domain**], bemky.com
+# [**root**], /srv/[**user**]/[**domain**]
+# [**app_root**], /srv/[**user**]/current/public
 ###
+sudo su
 groupadd --system [**user**]
 useradd -c '[**user**] User' -g [**user**] --create-home --home /srv/[**user**] --shell /bin/bash [**user**]
 chmod 755 /srv/[**user**]
@@ -8,9 +14,12 @@ mkdir /srv/[**user**]/[**domain**]
 chown [**user**] /srv/[**user**]/[**domain**]
 chgrp [**user**] /srv/[**user**]/[**domain**]
 
+sudo su - [**user**]
 ssh-keyscan github.com >> /srv/[**user**]/.ssh/known_hosts
-sudo cat <<EOF >> /etc/sync-accounts.conf
-  [**user**]
+exit
+
+cat <<EOF >> /etc/sync-accounts.conf
+  [**user**]:
     - bemky
 EOF
 sync-accounts
@@ -22,7 +31,7 @@ server {
   listen [::]:80;
   server_name [**domain**];
   include /etc/nginx/letsencrypt.conf;
-  root /srv/[**user**]/[**domain**];
+  root [**root**];
 }
 EOF
 
@@ -38,15 +47,15 @@ certbot certonly \
         --email "benehmke@gmail.com" \
         --agree-tos \
         --no-eff-email \
-        --domains "[**domain**]"
+        --domains "www.[**domain**],[**domain**]"
         
 # use provided path to cert
-# for example [cert_path] = /etc/letsencrypt/live/[**domain**]/fullchain.pem
+# for example [**cert_path**] = /etc/letsencrypt/live/[**domain**]
 
 cat <<EOF > /etc/nginx/ssl/[**domain**]
-ssl_certificate         [cert_path]/fullchain.pem;
-ssl_certificate_key     [cert_path]/privkey.pem;
-ssl_trusted_certificate [cert_path]/chain.pem;
+ssl_certificate         [**cert_path**]/fullchain.pem;
+ssl_certificate_key     [**cert_path**]/privkey.pem;
+ssl_trusted_certificate [**cert_path**]/chain.pem;
 ssl_session_timeout 1d;
 ssl_session_cache   shared:SSL:50m;
 ssl_session_tickets off;
@@ -66,6 +75,16 @@ server {
   server_name [**domain**];
   include /etc/nginx/letsencrypt.conf;
   location ~ ^/ {
+    return 301 https://$domain$request_uri;
+  }
+}
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name www.[**domain**];
+  include /etc/nginx/ssl/[**domain**];
+
+  location ~ ^/ {
     return 301 https://[**domain**]$request_uri;
   }
 }
@@ -75,7 +94,7 @@ server {
   server_name [**domain**];
   include /etc/nginx/ssl/[**domain**];
   
-  root /srv/[**user**]/[**domain**];
+  root [**app_root**];
   location / {
     location ~ ^/(assets)/ {
       gzip_vary on;
